@@ -1644,6 +1644,18 @@ static bool convert_subq_to_sj(JOIN *parent_join, Item_in_subselect *subq_pred)
         }
       }
       /*
+        outer_tbl is replaced by wrap_nest.
+        For subselects, update emb_on_expr_nest to point to wrap_nest
+        instead of outer_tbl.
+      */
+      List_iterator_fast<Item_in_subselect> li_isq(parent_join->select_lex->sj_subselects);
+      while (Item_in_subselect *in_subq= li_isq++)
+      {
+        if (in_subq->emb_on_expr_nest == outer_tbl)
+          in_subq->emb_on_expr_nest= wrap_nest;
+      }
+
+      /*
         Ok now wrap_nest 'contains' outer_tbl and we're ready to add the 
         semi-join nest into it
       */
