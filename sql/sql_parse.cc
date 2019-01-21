@@ -8971,7 +8971,7 @@ my_bool find_thread_callback(THD *thd, find_thread_callback_arg *arg)
 THD *find_thread_by_id(longlong id, bool query_id)
 {
   find_thread_callback_arg arg(id, query_id);
-  server_threads.iterate((my_hash_walk_action) find_thread_callback, &arg);
+  server_threads.iterate(find_thread_callback, &arg);
   return arg.thd;
 }
 
@@ -9098,7 +9098,7 @@ static uint kill_threads_for_user(THD *thd, LEX_USER *user,
   DBUG_PRINT("enter", ("user: %s  signal: %u", user->user.str,
                        (uint) kill_signal));
 
-  if (server_threads.iterate((my_hash_walk_action) kill_threads_callback, &arg))
+  if (server_threads.iterate(kill_threads_callback, &arg))
     DBUG_RETURN(ER_KILL_DENIED_ERROR);
 
   if (!arg.threads_to_kill.is_empty())

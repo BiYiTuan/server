@@ -650,7 +650,7 @@ Le_creator le_creator;
 MYSQL_FILE *bootstrap_file;
 int bootstrap_error;
 
-Thread_map server_threads;
+THD_list server_threads;
 Rpl_filter* cur_rpl_filter;
 Rpl_filter* global_rpl_filter;
 Rpl_filter* binlog_filter;
@@ -1705,7 +1705,7 @@ static void close_connections(void)
     This will give the threads some time to gracefully abort their
     statements and inform their clients that the server is about to die.
   */
-  server_threads.iterate((my_hash_walk_action) kill_all_threads, 0);
+  server_threads.iterate(kill_all_threads);
 
   Events::deinit();
   slave_prepare_for_shutdown();
@@ -1736,7 +1736,7 @@ static void close_connections(void)
     This will ensure that threads that are waiting for a command from the
     client on a blocking read call are aborted.
   */
-  server_threads.iterate((my_hash_walk_action) kill_all_threads_once_again, 0);
+  server_threads.iterate(kill_all_threads_once_again);
 
   end_slave();
   /* All threads has now been aborted */
@@ -9986,7 +9986,7 @@ static void recalculate_thread_id_range(my_thread_id *low, my_thread_id *high)
   // Add sentinels
   ids.push_back(0);
   ids.push_back(UINT_MAX32);
-  server_threads.iterate((my_hash_walk_action) recalculate_callback, &ids);
+  server_threads.iterate(recalculate_callback, &ids);
 
   std::sort(ids.begin(), ids.end());
   my_thread_id max_gap= 0;

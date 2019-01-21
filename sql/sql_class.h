@@ -6820,7 +6820,7 @@ private:
 
 
 /** THD registry */
-class Thread_map
+class THD_list
 {
   I_List<THD> threads;
   mutable mysql_mutex_t mutex;
@@ -6883,13 +6883,13 @@ public:
       @retval 0 iteration completed successfully
       @retval 1 iteration was interrupted (action returned 1)
   */
-  int iterate(my_hash_walk_action action, void *argument)
+  template <typename T> int iterate(my_bool (*action)(THD *thd, T *arg), T *arg= 0)
   {
     int res= 0;
     mysql_mutex_lock(&mutex);
     I_List_iterator<THD> it(threads);
     while (auto tmp= it++)
-      if ((res= action(tmp, argument)))
+      if ((res= action(tmp, arg)))
         break;
     mysql_mutex_unlock(&mutex);
     return res;
@@ -6900,7 +6900,7 @@ public:
   void avoid_galera4_merge_conflicts_unlock() { mysql_mutex_unlock(&mutex); }
 };
 
-extern Thread_map server_threads;
+extern THD_list server_threads;
 
 #endif /* MYSQL_SERVER */
 #endif /* SQL_CLASS_INCLUDED */

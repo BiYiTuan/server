@@ -656,7 +656,7 @@ static void* timer_thread(void *param)
         /* Reset next timeout check, it will be recalculated below */
         my_atomic_fas64((volatile int64*) &timer->next_timeout_check,
                         ULONGLONG_MAX);
-        server_threads.iterate((my_hash_walk_action) timeout_check, timer);
+        server_threads.iterate(timeout_check, timer);
       }
     }
     mysql_mutex_unlock(&timer->mutex);

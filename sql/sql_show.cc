@@ -2888,7 +2888,7 @@ void mysqld_list_processes(THD *thd,const char *user, bool verbose)
   if (thd->killed)
     DBUG_VOID_RETURN;
 
-  server_threads.iterate((my_hash_walk_action) list_callback, &arg);
+  server_threads.iterate(list_callback, &arg);
 
   ulonglong now= microsecond_interval_timer();
   char buff[20];                                // For progress
@@ -3320,7 +3320,7 @@ int fill_schema_processlist(THD* thd, TABLE_LIST* tables, COND* cond)
   DBUG_ENTER("fill_schema_processlist");
   DEBUG_SYNC(thd,"fill_schema_processlist_after_unow");
   if (!thd->killed &&
-      server_threads.iterate((my_hash_walk_action) processlist_callback, &arg))
+      server_threads.iterate(processlist_callback, &arg))
     DBUG_RETURN(1);
   DBUG_RETURN(0);
 }
@@ -3807,7 +3807,7 @@ uint calc_sum_of_all_status(STATUS_VAR *to)
   *to= global_status_var;
   to->local_memory_used= 0;
   /* Add to this status from existing threads */
-  server_threads.iterate((my_hash_walk_action) calc_sum_callback, &arg);
+  server_threads.iterate(calc_sum_callback, &arg);
   DBUG_RETURN(arg.count);
 }
 

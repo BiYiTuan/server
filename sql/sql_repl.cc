@@ -549,7 +549,7 @@ static my_bool adjust_callback(THD *thd, my_off_t *purge_offset)
 
 void adjust_linfo_offsets(my_off_t purge_offset)
 {
-  server_threads.iterate((my_hash_walk_action) adjust_callback, &purge_offset);
+  server_threads.iterate(adjust_callback, &purge_offset);
 }
 
 
@@ -566,8 +566,7 @@ static my_bool log_in_use_callback(THD *thd, const char *log_name)
 
 bool log_in_use(const char* log_name)
 {
-  return server_threads.iterate((my_hash_walk_action) log_in_use_callback,
-                                (void*) log_name);
+  return server_threads.iterate(log_in_use_callback, log_name);
 }
 
 bool purge_error_message(THD* thd, int res)
@@ -3380,7 +3379,7 @@ static my_bool kill_callback(THD *thd, kill_callback_arg *arg)
 void kill_zombie_dump_threads(uint32 slave_server_id)
 {
   kill_callback_arg arg(slave_server_id);
-  server_threads.iterate((my_hash_walk_action) kill_callback, &arg);
+  server_threads.iterate(kill_callback, &arg);
 
   if (arg.thd)
   {

@@ -692,7 +692,7 @@ Event_scheduler::workers_count()
 {
   uint32_t count= 0;
   DBUG_ENTER("Event_scheduler::workers_count");
-  server_threads.iterate((my_hash_walk_action) workers_count_callback, &count);
+  server_threads.iterate(workers_count_callback, &count);
   DBUG_RETURN(count);
 }
 

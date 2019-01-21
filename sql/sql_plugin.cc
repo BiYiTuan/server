@@ -4371,6 +4371,6 @@ my_bool post_init_callback(THD *thd, void *)
 
 void wsrep_plugins_post_init()
 {
-  server_threads.iterate((my_hash_walk_action) post_init_callback, 0);
+  server_threads.iterate(post_init_callback);
 }
 #endif /* WITH_WSREP */
