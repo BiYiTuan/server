@@ -296,7 +296,6 @@ extern int mysqld_server_started, mysqld_server_initialized;
 extern "C" MYSQL_PLUGIN_IMPORT int orig_argc;
 extern "C" MYSQL_PLUGIN_IMPORT char **orig_argv;
 extern pthread_attr_t connection_attrib;
-extern MYSQL_FILE *bootstrap_file;
 extern my_bool old_mode;
 extern LEX_STRING opt_init_connect, opt_init_slave;
 extern int bootstrap_error;

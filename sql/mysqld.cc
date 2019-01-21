@@ -647,7 +647,6 @@ Lt_creator lt_creator;
 Ge_creator ge_creator;
 Le_creator le_creator;
 
-MYSQL_FILE *bootstrap_file;
 int bootstrap_error;
 
 THD_list server_threads;
@@ -1505,7 +1504,6 @@ void handle_connections_sockets();
 #endif
 
 pthread_handler_t kill_server_thread(void *arg);
-static void bootstrap(MYSQL_FILE *file);
 static bool read_init_file(char *file_name);
 pthread_handler_t handle_slave(void *arg);
 static void clean_up(bool print_message);
@@ -6272,49 +6270,6 @@ int mysqld_main(int argc, char **argv)
   return 0;
 }
 #endif
-
-
-/**
-  Execute all commands from a file. Used by the mysql_install_db script to
-  create MySQL privilege tables without having to start a full MySQL server
-  and by read_init_file() if mysqld was started with the option --init-file.
-*/
-
-static void bootstrap(MYSQL_FILE *file)
-{
-#ifndef EMBEDDED_LIBRARY
-  pthread_t t;
-#endif
-  DBUG_ENTER("bootstrap");
-
-  THD *thd= new THD(next_thread_id());
-#ifdef WITH_WSREP
-  thd->variables.wsrep_on= 0;
-#endif
-  thd->bootstrap=1;
-  my_net_init(&thd->net,(st_vio*) 0, thd, MYF(0));
-  thd->max_client_packet_length= thd->net.max_packet;
-  thd->security_ctx->master_access= ~(ulong)0;
-
-  bootstrap_file=file;
-#ifndef EMBEDDED_LIBRARY			// TODO:  Enable this
-  if (int error= mysql_thread_create(key_thread_bootstrap, &t, 0,
-                                     handle_bootstrap, (void*) thd))
-  {
-    sql_print_warning("Can't create thread to handle bootstrap (errno= %d)",
-                      error);
-    bootstrap_error=-1;
-    delete thd;
-    DBUG_VOID_RETURN;
-  }
-  pthread_join(t, 0);
-#else
-  thd->mysql= 0;
-  do_handle_bootstrap(thd);
-#endif
-
-  DBUG_VOID_RETURN;
-}
 
 
 static bool read_init_file(char *file_name)
