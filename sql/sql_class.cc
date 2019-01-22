@@ -849,7 +849,7 @@ THD::THD(my_thread_id id, bool is_wsrep_applier, bool skip_global_sys_var_lock)
   save_prep_leaf_list= FALSE;
   /* Restore THR_THD */
   set_current_thd(old_THR_THD);
-  inc_thread_count();
+  thread_safe_increment32(&thread_count);
 }
 
 
@@ -1673,7 +1673,27 @@ THD::~THD()
   }
   update_global_memory_status(status_var.global_memory_used);
   set_current_thd(orig_thd == this ? 0 : orig_thd);
-  dec_thread_count();
+
+  /*
+    Send a signal to unblock close_conneciton() if there is no more
+    threads running with a THD attached
+
+    It's safe to check for thread_count outside of a mutex as we are
+    only interested to see if they where decremented to 0 by a previous
+    unlink_thd() call.
+
+    We should only signal COND_thread_count if thread_count is 0,
+    false positives are ok.
+  */
+  DBUG_ASSERT(thread_count > 0);
+  thread_safe_decrement32(&thread_count);
+  if (!thread_count)
+  {
+    /* Signal close_connections() that all THD's are freed */
+    mysql_mutex_lock(&LOCK_thread_count);
+    mysql_cond_broadcast(&COND_thread_count);
+    mysql_mutex_unlock(&LOCK_thread_count);
+  }
   DBUG_VOID_RETURN;
 }
 

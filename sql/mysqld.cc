@@ -465,7 +465,7 @@ ulong delay_key_write_options;
 uint protocol_version;
 uint lower_case_table_names;
 ulong tc_heuristic_recover= 0;
-int32 thread_count, service_thread_count;
+int32 thread_count;
 int32 slave_open_temp_tables;
 ulong thread_created;
 ulong back_log, connect_timeout, concurrency, server_id;
@@ -1740,7 +1740,7 @@ static void close_connections(void)
   /* All threads has now been aborted */
   DBUG_PRINT("quit",("Waiting for threads to die (count=%u)",thread_count));
   mysql_mutex_lock(&LOCK_thread_count);
-  while (thread_count || service_thread_count)
+  while (thread_count)
   {
     mysql_cond_wait(&COND_thread_count, &LOCK_thread_count);
     DBUG_PRINT("quit",("One thread died (count=%u)",thread_count));
@@ -2717,30 +2717,6 @@ void dec_connection_count(scheduler_functions *scheduler)
   mysql_mutex_lock(&LOCK_connection_count);
   (*scheduler->connection_count)--;
   mysql_mutex_unlock(&LOCK_connection_count);
-}
-
-
-/*
-  Send a signal to unblock close_conneciton() if there is no more
-  threads running with a THD attached
-
-  It's safe to check for thread_count and service_thread_count outside
-  of a mutex as we are only interested to see if they where decremented
-  to 0 by a previous unlink_thd() call.
-
-  We should only signal COND_thread_count if both variables are 0,
-  false positives are ok.
-*/
-
-void signal_thd_deleted()
-{
-  if (!thread_count && !service_thread_count)
-  {
-    /* Signal close_connections() that all THD's are freed */
-    mysql_mutex_lock(&LOCK_thread_count);
-    mysql_cond_broadcast(&COND_thread_count);
-    mysql_mutex_unlock(&LOCK_thread_count);
-  }
 }
 
 
@@ -8173,7 +8149,6 @@ static int mysql_init_variables(void)
   cleanup_done= 0;
   test_flags= select_errors= dropping_tables= ha_open_options=0;
   thread_count= kill_cached_threads= wake_thread= 0;
-  service_thread_count= 0;
   slave_open_temp_tables= 0;
   cached_thread_count= 0;
   opt_endinfo= using_udf_functions= 0;

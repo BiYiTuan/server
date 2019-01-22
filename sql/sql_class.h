@@ -2153,19 +2153,6 @@ private:
   inline bool is_conventional() const
   { DBUG_ASSERT(0); return Statement::is_conventional(); }
 
-  void dec_thread_count(void)
-  {
-    DBUG_ASSERT(thread_count > 0);
-    thread_safe_decrement32(&thread_count);
-    signal_thd_deleted();
-  }
-
-
-  void inc_thread_count(void)
-  {
-    thread_safe_increment32(&thread_count);
-  }
-
 public:
   MDL_context mdl_context;
 
